@@ -1,0 +1,1 @@
+# Quant Daily Report

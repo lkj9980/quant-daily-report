@@ -1,4 +1,4 @@
-name: Quant Quant Pipeline
+name: Daily  Quant Pipeline
 
 on:
   repository_dispatch:

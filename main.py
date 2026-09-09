@@ -1,6 +1,25 @@
 import os
 import datetime
 import markdown
+from src.collector import fetch_data
+from src.features import build_features
+from src.model import generate_signals
+from src.reporter import generate_html_report
+
+def main():
+    print("1. 데이터 수집 중...")
+    # raw_data = fetch_data()
+    
+    print("2. 인풋 피처 및 레짐 필터 적용 중...")
+    # features = build_features(...)
+    
+    print("3. 아웃풋 확률 분포 및 신뢰도 검사 중...")
+    # signals = generate_signals(...)
+    
+    print("4. 일일 퀀트 리포트 HTML 생성 완료.")
+    # generate_dashboard(signals)
+    generate_dashboard()
+    
 
 def read_markdown_content():
     # 마크다운 소스 파일을 읽어옵니다. (없으면 기본 텍스트 반환)
@@ -37,4 +56,4 @@ def generate_dashboard():
     print("HTML 하드코딩 없이 마크다운 및 템플릿 연동으로 index.html 생성 완료!")
 
 if __name__ == "__main__":
-    generate_dashboard()
+    main()

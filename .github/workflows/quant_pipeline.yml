@@ -1,0 +1,49 @@
+name: Quant Macro Automation
+
+on:
+  repository_dispatch:
+    types: [run_quant_pipeline]  # 외부에서 이 이름을 부르면 실행됩니다.
+  workflow_dispatch:
+  
+permissions:
+  contents: write
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          pip install yfinance google-genai pandas markdown requests
+          
+      - name: Run Quant Script & Generate index.html
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }} 
+          MY_EMAIL: ${{ secrets.MY_EMAIL }} 
+        run: |
+          python main.py
+                    
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          # 1. 원격 저장소의 최신 변경 사항을 안전하게 병합 (conflict 발생 시 무시하거나 덮어쓰기 설정 가능)
+          git pull origin main --no-rebase || echo "Pull skipped or conflicted"
+          
+          # 2. 내 리포트 파일들 스테이징
+          git add index.html history/ data/ html/
+          
+          # 3. 변경 사항이 있을 때만 커밋
+          git diff --staged --quiet || git commit -m "Auto-update dashboard via external cron [skip ci]"
+          
+          # 4. 푸시
+          git push origin main

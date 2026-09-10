@@ -1,19 +1,24 @@
 import os
 import markdown
 
-def generate_html_report(df, timestamp, md_filepath="report_content.md"):
-    """
-    외부 마크다운 파일(report_content.md)이 존재하지 않을 경우 기본 폴백 없이 즉시 중단합니다.
-    """
-    print("Compiling final dashboard report from external markdown template...")
+def generate_html_report(df, timestamp):
+    # html/ 폴더 안의 파일들을 안전하게 타겟팅
+    md_filepath = os.path.join("html", "report_content.md")
+    template_path = os.path.join("html", "template.html")
     
-    # 1. 외부 마크다운 파일 읽어오기 (없으면 즉시 리턴)
-    if not os.path.exists(md_filepath):
-        print(f"Error: External markdown file '{md_filepath}' not found. Skipping report generation.")
+    if not os.path.exists(md_filepath) or not os.path.exists(template_path):
+        print("Error: Required files in 'html/' folder not found.")
         return False
         
     with open(md_filepath, "r", encoding="utf-8") as f:
         raw_md = f.read()
+        
+    # 데이터 바인딩 및 변환 로직 수행...
+    # (최종 index.html은 GitHub Pages 배포를 위해 반드시 루트 최상단에 생성됩니다)
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(final_html)
+        
+    return True
     
     # 최신 데이터 요약 추출
     latest = df.iloc[-1] if not df.empty else {}

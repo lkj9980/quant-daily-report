@@ -4,8 +4,8 @@ import shutil
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
 # 예시: 최신 index.html을 history 폴더 쪽으로 백업/아카이브할 때
-src_path = os.path.join(base_dir, "Updated Report Content Template.md")
-dst_path = os.path.join(base_dir, "html/report_content.md")  # 또는 타임스탬프 조합
+src_path = os.path.join(base_dir, ".github/workflows/ClearWorkflow.yml.txt")
+dst_path = os.path.join(base_dir, ".github/workflows/ClearWorkflow.yml")  # 또는 타임스탬프 조합
 
 os.makedirs(os.path.dirname(dst_path), exist_ok=True)
 

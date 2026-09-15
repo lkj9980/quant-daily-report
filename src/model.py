@@ -1,3 +1,4 @@
+import pandas as pd
 import numpy as np
 
 def generate_signals(df, confidence_threshold=0.65):

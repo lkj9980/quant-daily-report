@@ -28,6 +28,9 @@ jobs:
       - name: Run Quant Pipeline & Generate Report
         env:
           PYTHONPATH: .
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }} 
+          MY_EMAIL: ${{ secrets.MY_EMAIL }} 
         run: |
           python main.py
 

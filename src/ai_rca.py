@@ -35,23 +35,30 @@ def generate_rca_report(backtest_metrics, prompt_template_path="html/rca_prompt_
     """
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        return "⚠️ [AI RCA 경고]: GEMINI_API_KEY가 설정되지 않아 기본 브리핑으로 폴백합니다. (최근 롤링 윈도우 기간 동안 매크로 레짐 필터 정상 작동 중)"
+        return "⚠️ [AI RCA 경고]: GEMINI_API_KEY가 설정되지 않았습니다."
+
+    # 필수 지표 누락 여부 엄격 검증 (가짜 기본값으로 대충 때우지 않음)
+    required_keys = ['max_drawdown', 'sharpe_ratio', 'win_rate']
+    for key in required_keys:
+        if key not in backtest_metrics:
+            return f"❌ [AI RCA 에러]: 필수 백테스트 지표('{key}')가 누락되어 AI 진단을 중단합니다."
+
+    # 실제 계산된 리얼 수치 추출
+    mdd_str = str(backtest_metrics.get('max_drawdown'))
+    sharpe_str = str(backtest_metrics.get('sharpe_ratio'))
+    win_rate_str = str(backtest_metrics.get('win_rate'))
 
     # 외부 프롬프트 템플릿 로드
     if os.path.exists(prompt_template_path):
         with open(prompt_template_path, "r", encoding="utf-8") as f:
             template_text = f.read()
     else:
-        template_text = "샤프 지수: {sharpe_ratio}, MDD: {max_drawdown}, 승률: {win_rate}을 바탕으로 퀀트 RCA 브리핑을 작성해 주세요."
+        return f"❌ [AI RCA 에러]: 프롬프트 템플릿 파일을 찾을 수 없습니다 ({prompt_template_path})."
 
     try:
         client = genai.Client(api_key=api_key)
-        
-        mdd_str = backtest_metrics.get('max_drawdown', '-3.8%')
-        sharpe_str = str(backtest_metrics.get('sharpe_ratio', 1.92))
-        win_rate_str = backtest_metrics.get('win_rate', '71.2%')
 
-        # 템플릿에 지표 바인딩
+        # 템플릿에 검증된 리얼 지표 바인딩
         prompt = template_text.format(
             sharpe_ratio=sharpe_str,
             max_drawdown=mdd_str,

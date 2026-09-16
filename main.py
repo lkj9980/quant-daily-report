@@ -11,8 +11,10 @@ def main():
     print(f"[{now}] Quant Pipeline Execution Started.")
     
     # 1. 데이터 수집
-    raw_df = fetch_data(ticker="SPY", period="2y")
-    
+    #raw_df = fetch_data(ticker="SPY", period="2y")
+    # 원하는 종목 심볼을 전달합니다 ("NASDAQ100", "KOSPI200", "KOSDAQ150" 또는 야후파이낸스 티커)
+    raw_df = fetch_data(ticker="KOSPI200", period="2y")
+
     # 2. 피처 엔지니어링 및 레짐 필터 통합
     features_df = build_features(raw_df)
     

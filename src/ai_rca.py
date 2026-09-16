@@ -2,6 +2,7 @@ import os
 import time
 from google import genai
 from google.genai.errors import ServerError
+from src.config import PATHS
 
 def call_gemini_with_retry(client, model_name, prompt_text, max_retries=3, delay=5):
     """
@@ -28,27 +29,27 @@ def call_gemini_with_retry(client, model_name, prompt_text, max_retries=3, delay
             print(f"❌ 예상치 못한 에러 발생: {e}")
             raise e
 
-def generate_rca_report(backtest_metrics, prompt_template_path="html/rca_prompt_template.txt"):
+def generate_rca_report(backtest_metrics):
     """
-    외부 텍스트 파일(html/rca_prompt_template.txt)에서 프롬프트를 불러온 뒤,
-    재시도 로직이 포함된 Google GenAI SDK와 결합하여 심층적인 AI RCA를 생성합니다.
+    백테스트 성과 지표가 온전하게 전달되었는지 엄격 검증하고,
+    중앙 설정된 프롬프트 템플릿 경로를 로드하여 AI 진단을 수행합니다.
     """
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         return "⚠️ [AI RCA 경고]: GEMINI_API_KEY가 설정되지 않았습니다."
 
-    # 필수 지표 누락 여부 엄격 검증 (가짜 기본값으로 대충 때우지 않음)
+    # 필수 지표 누락 여부 엄격 검증 (가짜 기본값 금지)
     required_keys = ['max_drawdown', 'sharpe_ratio', 'win_rate']
     for key in required_keys:
         if key not in backtest_metrics:
             return f"❌ [AI RCA 에러]: 필수 백테스트 지표('{key}')가 누락되어 AI 진단을 중단합니다."
 
-    # 실제 계산된 리얼 수치 추출
     mdd_str = str(backtest_metrics.get('max_drawdown'))
     sharpe_str = str(backtest_metrics.get('sharpe_ratio'))
     win_rate_str = str(backtest_metrics.get('win_rate'))
 
-    # 외부 프롬프트 템플릿 로드
+    # 중앙 설정에서 프롬프트 템플릿 경로 가져오기
+    prompt_template_path = PATHS["rca_prompt_txt"]
     if os.path.exists(prompt_template_path):
         with open(prompt_template_path, "r", encoding="utf-8") as f:
             template_text = f.read()
@@ -58,14 +59,12 @@ def generate_rca_report(backtest_metrics, prompt_template_path="html/rca_prompt_
     try:
         client = genai.Client(api_key=api_key)
 
-        # 템플릿에 검증된 리얼 지표 바인딩
         prompt = template_text.format(
             sharpe_ratio=sharpe_str,
             max_drawdown=mdd_str,
             win_rate=win_rate_str
         )
 
-        # 재시도 메커니즘을 적용하여 gemini-3.6-flash 모델 호출
         response = call_gemini_with_retry(
             client=client,
             model_name="gemini-3.6-flash",
@@ -77,7 +76,7 @@ def generate_rca_report(backtest_metrics, prompt_template_path="html/rca_prompt_
         if response and response.text:
             return f"🤖 [AI RCA 진단]: {response.text.strip()}"
         else:
-            return "✅ [AI RCA 안정]: 모델이 정상적인 롤링 윈도우 알파를 도출했습니다."
+            return "⚠️ [AI RCA 경고]: 모델로부터 빈 응답이 반환되었습니다."
 
     except Exception as e:
         print(f"Error generating AI RCA: {e}")

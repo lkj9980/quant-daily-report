@@ -1,43 +1,121 @@
-## 📈 퀀트 파이프라인 일일 실행 결과 및 자동 매매 가이드
+<!-- 탭 전환 스타일 및 스크립트 (2페이지 느낌을 한 화면에서 부드럽게 전환) -->
+<div class="flex space-x-2 mb-6 border-b border-gray-700 pb-4">
+    <button onclick="switchTab('friendly')" id="btn-friendly" class="px-4 py-2 rounded-xl text-sm font-semibold bg-emerald-500 text-gray-900 transition shadow-lg">
+        ☕ 쉬운 비서 레포트 (대중용)
+    </button>
+    <button onclick="switchTab('pro')" id="btn-pro" class="px-4 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600 transition">
+        📈 전문가용 심층 데이터 (프로용)
+    </button>
+</div>
 
-* **분석 기준일(Date):** {date}
-* **종가 (Close):** `${close:,.2f}`
-* **20일 이평선:** `${ma_20:,.2f}`
-* **최종 시그널:** **{signal}** (모델 신뢰도: `{confidence:.1f}%`)
+<!-- [페이지 1] 대중 친화적인 쉬운 레포트 -->
+<div id="tab-friendly" class="space-y-6">
+    <div class="bg-gray-800/80 border border-emerald-500/30 rounded-2xl p-6 shadow-inner">
+        <h2 class="text-xl font-bold text-emerald-400 mb-2">☕ 한눈에 보는 오늘의 퀀트 비서 레포트 ({date})</h2>
+        <p class="text-gray-300 text-base leading-relaxed bg-gray-900/40 p-4 rounded-xl border border-gray-700">
+            "오늘 시장은 한 줄로 요약해서, 비록 어제 주가가 단기 이평선보다 살짝 내려앉았지만, 큰 그림의 든든한 상승장 버팀목 속에서 차분하게 롱(매수) 포지션을 준비하는 날입니다."
+        </p>
+    </div>
 
----
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-gray-900/50 p-5 rounded-xl border border-gray-700">
+            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">📊 오늘의 시장 성적표</h3>
+            <ul class="space-y-2 text-sm">
+                <li><strong>현재 주가:</strong> <span class="text-emerald-400 font-mono">${close:,.2f}</span></li>
+                <li><strong>한 달 평균선 (20일선):</strong> <span class="text-blue-400 font-mono">${ma_20:,.2f}</span></li>
+                <li><strong>AI 진단 신호:</strong> <strong class="text-yellow-400">{signal}</strong> (확신도: <code>{confidence:.1f}%</code>)</li>
+            </ul>
+        </div>
 
-### 🚀 자동 매매 (Auto-Execution) 및 포지션 시그널
+        <div class="bg-gray-900/50 p-5 rounded-xl border border-gray-700">
+            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">🚀 행동 가이드 및 비상 탈출</h3>
+            <ul class="space-y-2 text-sm">
+                <li><strong>추천 행동:</strong> <span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">주식 비중 40% 매수</span></li>
+                <li><strong>손절 기준가:</strong> 주가가 <span class="text-red-400 font-mono">${ma_20:,.2f}</span> 이탈 시 현금 100% 헷지</li>
+            </ul>
+        </div>
+    </div>
 
-* **주문 집행 상태:** `[AUTOMATED EXECUTION READY]`
-* **목표 포지션:** **Long (비중 40% 할당)**
-* **자동 주문 라우터:** Alpaca/Interactive Brokers API 연동 대기 중 (신뢰도 $\ge 65\%$ 충족으로 자동 매수 트리거 활성화)
+    <div class="bg-gray-900/50 p-5 rounded-xl border border-gray-700">
+        <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">🔮 AI가 바라본 미래 확률 벡터</h3>
+        <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700">
+                <div class="text-xs text-gray-400">상승 확률</div>
+                <div class="text-lg font-bold text-emerald-400">78.5%</div>
+            </div>
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700">
+                <div class="text-xs text-gray-400">횡보 확률</div>
+                <div class="text-lg font-bold text-yellow-400">14.5%</div>
+            </div>
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700">
+                <div class="text-xs text-gray-400">하락 확률</div>
+                <div class="text-lg font-bold text-red-400">7.0%</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-### 📊 다중 클래스 확률 분포 (Probability Vector)
-* **상승 확률 (Bullish):** `78.5%`
-* **횡보/조정 확률 (Sideways):** `14.5%`
-* **하락 확률 (Bearish):** `7.0%`
+<!-- [페이지 2] 기존 전문가용 심층 데이터 (초기 숨김 또는 탭 전환용) -->
+<div id="tab-pro" class="space-y-6 hidden">
+    <div class="border-b border-gray-700 pb-4">
+        <h2 class="text-xl font-bold text-blue-400">📈 전문가용 퀀트 파이프라인 심층 백테스트 및 팩터 진단</h2>
+        <p class="text-xs text-gray-400 mt-1">원시 데이터 및 수학적 백테스트 지표 기반 상세 로그</p>
+    </div>
 
----
+    <div class="space-y-4 text-sm text-gray-300">
+        <div class="bg-gray-900/50 p-4 rounded-xl border border-gray-700">
+            <h3 class="font-semibold text-white mb-2">1. 원시 메트릭스 및 이격도</h3>
+            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                <li>분석 기준일(Date): {date}</li>
+                <li>종가 (Close): ${close:,.2f}</li>
+                <li>20일 이평선: ${ma_20:,.2f}</li>
+                <li>최종 시그널: {signal} (모델 신뢰도: {confidence:.1f}%)</li>
+            </ul>
+        </div>
 
-### 🔍 매크로 레짐 필터 및 알파 팩터 진단
+        <div class="bg-gray-900/50 p-4 rounded-xl border border-gray-700">
+            <h3 class="font-semibold text-white mb-2">2. 매크로 레짐 필터 및 고주파수 알파</h3>
+            <p class="text-gray-400 leading-relaxed">
+                현재 시장 상태는 <strong>BULL (상승장 레짐)</strong>으로 판정되었습니다. 10년물-2년물 스프레드 및 환율 변동성이 안정권에 머물러 위험 자산 선호 심리가 우세하며, 5일/20일 이격도(<code>disparity_5</code>)가 완만한 모멘텀을 형성하고 있습니다.
+            </p>
+        </div>
 
-1. **저주파수 레짐 필터 (Macro Regime):**
-   * 현재 시장 상태는 **BULL (상승장 레짐)**으로 판정되었습니다. 10년물-2년물 스프레드 및 환율 변동성이 안정권에 머물러 위험 자산 선호 심리가 우세합니다.
-2. **고주파수 알파 팩터 (High-Frequency Alpha):**
-   * 5일/20일 이격도(`disparity_5`)가 완만한 모멘텀을 형성하고 있으며, 기관 수급 유입 감지로 추세 추종 시그널(UP)의 신뢰도가 강화되었습니다.
+        <div class="bg-gray-900/50 p-4 rounded-xl border border-gray-700">
+            <h3 class="font-semibold text-white mb-2">3. 워킹 포워드 신뢰성 검증 (Walk-Forward Validation)</h3>
+            <ul class="list-disc list-inside space-y-1 text-gray-400">
+                <li>워킹 포워드 성과 (Sharpe Ratio): <strong>1.92</strong></li>
+                <li>표본 외 최대 낙폭 (MDD): <strong>-3.8%</strong></li>
+                <li>역사적 승률: <strong>71.2%</strong></li>
+            </ul>
+        </div>
 
----
+        <div class="bg-gray-800 p-4 rounded-xl border border-emerald-500/30">
+            <h3 class="font-semibold text-emerald-400 mb-1">🤖 AI 근본 원인 분석 (RCA) 로그</h3>
+            <p class="text-gray-300 text-xs font-mono">{rca_briefing}</p>
+        </div>
+    </div>
+</div>
 
-### 🛡️ 백테스트 및 워킹 포워드 신뢰성 검증 (Walk-Forward Validation)
-* **워킹 포워드 성과 (Sharpe Ratio):** `1.92` (우수)
-* **표본 외 최대 낙폭 (MDD):** `-3.8%` (철저한 하방 방어)
-* **역사적 승률:** `71.2%`
-* **근본 원인 분석 (RCA):** ✅ `[RCA 안정]: 최근 롤링 윈도우 기간 동안 매크로 레짐 필터와 고주파수 알파가 정상 작동하여 하방 리스크를 성공적으로 방어함.`
+<!-- 탭 전환 인터랙션 스크립트 -->
+<script>
+function switchTab(type) {
+    const friendlyTab = document.getElementById('tab-friendly');
+    const proTab = document.getElementById('tab-pro');
+    const btnFriendly = document.getElementById('btn-friendly');
+    const btnPro = document.getElementById('btn-pro');
 
----
-
-### 💡 실전 트레이딩 및 리스크 관리 가이드
-
-* **실행 가이드:** 신뢰도가 임계값($65.0\%$)을 상회하므로 현금 보유(No-Action Zone) 대신 **롱(Long) 포지션 집행** 구간으로 최종 판정합니다.
-* **손절 및 리스크 관리 (Stop-Loss):** 20일 이평선(${ma_20:,.2f}$) 이탈 시 자동 스탑로스 주문이 발동되어 즉시 헷지 모드로 전환됩니다.
+    if (type === 'friendly') {
+        friendlyTab.classList.remove('hidden');
+        proTab.classList.add('hidden');
+        btnFriendly.className = "px-4 py-2 rounded-xl text-sm font-semibold bg-emerald-500 text-gray-900 transition shadow-lg";
+        btnPro.className = "px-4 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600 transition";
+    } else {
+        friendlyTab.classList.add('hidden');
+        proTab.classList.remove('content-body', 'hidden'); // proTab 표시
+        proTab.classList.remove('hidden');
+        btnPro.className = "px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 text-gray-900 transition shadow-lg";
+        btnFriendly.className = "px-4 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600 transition";
+    }
+}
+</script>
+```eof

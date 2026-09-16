@@ -1,10 +1,37 @@
 import os
+import time
 from google import genai
+from google.genai.errors import ServerError
+
+def call_gemini_with_retry(client, model_name, prompt_text, max_retries=3, delay=5):
+    """
+    Gemini API 호출 시 서버 과부하(503) 또는 일시적 오류에 대응하여
+    지수 백오프(Exponential Backoff) 방식으로 재시도합니다.
+    """
+    for attempt in range(1, max_retries + 1):
+        try:
+            print(f"🔄 Gemini API 호출 시도 ({attempt}/{max_retries})...")
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt_text,
+            )
+            return response
+        except ServerError as e:
+            print(f"⚠️ 서버 과부하(503) 또는 일시적 오류 발생: {e}")
+            if attempt == max_retries:
+                print("❌ 최대 재시도 횟수 초과.")
+                raise e
+            wait_time = delay * attempt
+            print(f"⏳ {wait_time}초 후 재시도합니다...")
+            time.sleep(wait_time)
+        except Exception as e:
+            print(f"❌ 예상치 못한 에러 발생: {e}")
+            raise e
 
 def generate_rca_report(backtest_metrics, prompt_template_path="html/rca_prompt_template.txt"):
     """
     외부 텍스트 파일(html/rca_prompt_template.txt)에서 프롬프트를 불러온 뒤,
-    Google GenAI SDK와 결합하여 심층적인 인공지능 근본 원인 분석(AI RCA)을 생성합니다.
+    재시도 로직이 포함된 Google GenAI SDK와 결합하여 심층적인 AI RCA를 생성합니다.
     """
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -15,7 +42,6 @@ def generate_rca_report(backtest_metrics, prompt_template_path="html/rca_prompt_
         with open(prompt_template_path, "r", encoding="utf-8") as f:
             template_text = f.read()
     else:
-        # 파일이 없을 경우 기본 폴백 프롬프트 사용
         template_text = "샤프 지수: {sharpe_ratio}, MDD: {max_drawdown}, 승률: {win_rate}을 바탕으로 퀀트 RCA 브리핑을 작성해 주세요."
 
     try:
@@ -32,9 +58,13 @@ def generate_rca_report(backtest_metrics, prompt_template_path="html/rca_prompt_
             win_rate=win_rate_str
         )
 
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
+        # 재시도 메커니즘을 적용하여 gemini-3.6-flash 모델 호출
+        response = call_gemini_with_retry(
+            client=client,
+            model_name="gemini-3.6-flash",
+            prompt_text=prompt,
+            max_retries=3,
+            delay=5
         )
         
         if response and response.text:

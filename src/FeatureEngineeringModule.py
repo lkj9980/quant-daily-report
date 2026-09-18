@@ -70,21 +70,3 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
   )
   return feat_df
 
-
-if __name__ == "__main__":
-  print("--- Testing build_features Module ---")
-  import numpy as np
-
-  dates = pd.date_range(end="2026-09-18", periods=100, freq="B").strftime(
-      "%Y-%m-%d"
-  )
-  mock_df = pd.DataFrame({
-      "Date": dates,
-      "Open": np.linspace(340, 360, 100),
-      "High": np.linspace(345, 365, 100),
-      "Low": np.linspace(335, 355, 100),
-      "Close": np.linspace(340, 360, 100),
-      "Volume": [1000000] * 100,
-  })
-  res_df = build_features(mock_df)
-  print(res_df[["Date", "Close", "SMA_60", "Regime"]].tail())

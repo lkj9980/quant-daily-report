@@ -89,9 +89,3 @@ def fetch_data(ticker: str = "KOSPI200", period: str = "2y") -> pd.DataFrame:
         "Volume": 1000000,
     })
     return fallback_df
-
-
-if __name__ == "__main__":
-  print("--- Testing fetch_data Module ---")
-  sample_df = fetch_data(ticker="KOSPI200", period="6mo")
-  print(sample_df.tail())

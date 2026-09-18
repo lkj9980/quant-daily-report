@@ -13,10 +13,13 @@ def main():
     # 1. 데이터 수집
     #raw_df = fetch_data(ticker="SPY", period="2y")
     # 원하는 종목 심볼을 전달합니다 ("NASDAQ100", "KOSPI200", "KOSDAQ150" 또는 야후파이낸스 티커)
-    raw_df = fetch_data(ticker="KOSPI200", period="2y")
-
+    #raw_df = fetch_data(ticker="KOSPI200", period="2y")
+    print("--- Testing fetch_data Module ---")
+    sample_df = fetch_data(ticker="KOSPI200", period="6mo")
+    print(sample_df.tail())
+    
     # 2. 피처 엔지니어링 및 레짐 필터 통합
-    features_df = build_features(raw_df)
+    features_df = build_features(sample_df)
     
     # 3. 모델 시그널 및 신뢰도 점수 생성
     signaled_df = generate_signals(features_df)

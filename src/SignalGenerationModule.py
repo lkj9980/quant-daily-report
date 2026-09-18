@@ -70,20 +70,3 @@ def generate_signals(
       f" Action: {actions[-1]}"
   )
   return df
-
-
-if __name__ == "__main__":
-  print("--- Testing generate_signals Module ---")
-  # Mock test using sample dataframe if run standalone
-  import numpy as np
-
-  dates = pd.date_range(end="2026-09-18", periods=10, freq="B").strftime(
-      "%Y-%m-%d"
-  )
-  mock_df = pd.DataFrame({
-      "Date": dates,
-      "Close": np.linspace(350, 360, 10),
-      "Regime": ["Risk-On"] * 8 + ["Risk-Off"] * 2,
-  })
-  res_df = generate_signals(mock_df)
-  print(res_df[["Date", "Regime", "Target_Equity", "Action"]])

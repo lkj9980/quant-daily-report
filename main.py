@@ -1,54 +1,82 @@
 import datetime
-import numpy as np
-from src.collector import fetch_data
-from src.features import build_features
-from src.model import generate_signals
-from src.backtest import run_walk_forward_backtest
-from src.ai_rca import generate_rca_report
-from src.reporter import generate_html_report
+import logging
+import os
+import pandas as pd
+
+# Import our modular pipeline components
+from build_features import build_features
+from fetch_data import fetch_data
+from generate_rca_report import generate_html_report, generate_rca_report
+from generate_signals import generate_signals
+from run_backtest import run_walk_forward_backtest
+
+# Configure logging for pipeline orchestration
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
+logger = logging.getLogger(__name__)
+
 
 def main():
-    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[{now}] Quant Pipeline Execution Started.")
-    
-    # 1. 데이터 수집
-    #raw_df = fetch_data(ticker="SPY", period="2y")
-    # 원하는 종목 심볼을 전달합니다 ("NASDAQ100", "KOSPI200", "KOSDAQ150" 또는 야후파이낸스 티커)
-    #raw_df = fetch_data(ticker="KOSPI200", period="2y")
-    print("--- Testing fetch_data Module ---")
-    sample_df = fetch_data(ticker="KOSPI200", period="6mo")
-    print(sample_df.tail())
-    
-    # 2. 피처 엔지니어링 및 레짐 필터 통합
-    features_df = build_features(sample_df)
-    
-    # 3. 모델 시그널 및 신뢰도 점수 생성
-    #signaled_df = generate_signals(features_df)
-    print("--- Testing generate_signals Module ---")
-    # Mock test using sample dataframe if run standalone
-    dates = pd.date_range(end="2026-09-18", periods=10, freq="B").strftime("%Y-%m-%d")
-    mock_df = pd.DataFrame({
-        "Date": dates,
-        "Close": np.linspace(350, 360, 10),
-        "Regime": ["Risk-On"] * 8 + ["Risk-Off"] * 2,
-    })
-    res_df = generate_signals(mock_df)
-    print(res_df[["Date", "Regime", "Target_Equity", "Action"]])
-    
-    # 4. 백테스트 수치 검증 엔진 실행
+  """Orchestrates the entire 6-stage unified quantitative pipeline:
+
+  1. Fetch Data
+  2. Build Features & Regime Filter
+  3. Generate Signals with Threshold Banding
+  4. Run Walk-Forward Backtest
+  5. Generate AI RCA Diagnostic Briefing
+  6. Assemble and Archive HTML Report Card
+  """
+  now_kst = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+  logger.info(
+      f"--- KOSPI 200 Quant Intelligence Pipeline Execution Started [{now_kst}] ---"
+  )
+
+  # Ensure history directory exists for HTML report archiving
+  os.makedirs("history", exist_ok=True)
+
+  try:
+    # [Stage 1] Data Acquisition
+    logger.info("Stage 1/6: Fetching market data...")
+    raw_df = fetch_data(ticker="KOSPI200", period="2y")
+
+    # [Stage 2] Feature Engineering & Market Regime Filter
+    logger.info(
+        "Stage 2/6: Calculating technical indicators and market regime..."
+    )
+    features_df = build_features(raw_df)
+
+    # [Stage 3] Signal Generation with Threshold Banding (Turnover Reduction)
+    logger.info(
+        "Stage 3/6: Generating smoothed portfolio signals and weights..."
+    )
+    signaled_df = generate_signals(features_df, threshold=0.05)
+
+    # [Stage 4] Walk-Forward Backtest Verification
+    logger.info("Stage 4/6: Executing walk-forward backtest simulation...")
     backtest_metrics = run_walk_forward_backtest(signaled_df)
-    
-    # 5. AI RCA 진단 엔진 호출 (중앙 경로 설정 활용)
+
+    # [Stage 5] AI RCA Diagnostic Briefing Generation
+    logger.info("Stage 5/6: Generating AI RCA diagnostic analysis...")
     rca_briefing = generate_rca_report(backtest_metrics)
-    print(rca_briefing)
-    
-    # 6. 리포트 생성 및 history 아카이브 (rca_briefing 전달)
-    success = generate_html_report(signaled_df, now, rca_briefing=rca_briefing)
-    
-    if success:
-        print(f"[{now}] Pipeline Finished Successfully and index.html generated.")
-    else:
-        print(f"[{now}] Pipeline Finished with Errors (Report Generation Skipped).")
+
+    # [Stage 6] HTML Report Assembly and Archiving
+    logger.info("Stage 6/6: Assembling and archiving final HTML intelligence card...")
+    report_filename = generate_html_report(
+        signaled_df=signaled_df, timestamp=now_kst, rca_briefing=rca_briefing
+    )
+
+    logger.info(
+        f"--- Pipeline Execution Completed Successfully! Report saved to:"
+        f" {report_filename} ---"
+    )
+
+  except Exception as e:
+    logger.error(
+        f"Critical error encountered during pipeline execution: {e}",
+        exc_info=True,
+    )
+
 
 if __name__ == "__main__":
-    main()
+  main()

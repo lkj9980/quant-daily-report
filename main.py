@@ -1,4 +1,5 @@
 import datetime
+import numpy as np
 from src.collector import fetch_data
 from src.features import build_features
 from src.model import generate_signals
@@ -22,7 +23,17 @@ def main():
     features_df = build_features(sample_df)
     
     # 3. 모델 시그널 및 신뢰도 점수 생성
-    signaled_df = generate_signals(features_df)
+    #signaled_df = generate_signals(features_df)
+    print("--- Testing generate_signals Module ---")
+    # Mock test using sample dataframe if run standalone
+    dates = pd.date_range(end="2026-09-18", periods=10, freq="B").strftime("%Y-%m-%d")
+    mock_df = pd.DataFrame({
+        "Date": dates,
+        "Close": np.linspace(350, 360, 10),
+        "Regime": ["Risk-On"] * 8 + ["Risk-Off"] * 2,
+    })
+    res_df = generate_signals(mock_df)
+    print(res_df[["Date", "Regime", "Target_Equity", "Action"]])
     
     # 4. 백테스트 수치 검증 엔진 실행
     backtest_metrics = run_walk_forward_backtest(signaled_df)

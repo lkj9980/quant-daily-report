@@ -131,13 +131,3 @@ def generate_html_report(
 
   logger.info(f"HTML report successfully generated and saved to {filename}")
   return filename
-
-
-if __name__ == "__main__":
-  print("--- Testing Report Assembly Module ---")
-  mock_metrics = {
-      "cumulative_return": 18.4,
-      "max_drawdown": -9.2,
-      "win_rate": 58.3,
-  }
-  print(generate_rca_report(mock_metrics))

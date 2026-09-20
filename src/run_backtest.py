@@ -90,19 +90,3 @@ def run_walk_forward_backtest(signaled_df: pd.DataFrame) -> dict:
 
   logger.info(f"Backtest complete. Metrics summary: {metrics}")
   return metrics
-
-
-if __name__ == "__main__":
-  print("--- Testing run_backtest Module ---")
-  import numpy as np
-
-  dates = pd.date_range(end="2026-09-18", periods=100, freq="B").strftime(
-      "%Y-%m-%d"
-  )
-  mock_df = pd.DataFrame({
-      "Date": dates,
-      "Close": np.linspace(350, 380, 100),
-      "Target_Equity": [0.5] * 50 + [0.7] * 50,
-      "Action": ["Hold (Threshold Filtered)"] * 50 + ["Rebalance"] * 50,
-  })
-  print(run_walk_forward_backtest(mock_df))

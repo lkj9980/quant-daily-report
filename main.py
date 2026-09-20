@@ -4,11 +4,11 @@ import os
 import pandas as pd
 
 # Import our modular pipeline components
-from build_features import build_features
-from fetch_data import fetch_data
-from generate_rca_report import generate_html_report, generate_rca_report
-from generate_signals import generate_signals
-from run_backtest import run_walk_forward_backtest
+from src.build_features import build_features
+from src.fetch_data import fetch_data
+from src.generate_rca_report import generate_html_report, generate_rca_report
+from src.generate_signals import generate_signals
+from src.run_backtest import run_walk_forward_backtest
 
 # Configure logging for pipeline orchestration
 logging.basicConfig(

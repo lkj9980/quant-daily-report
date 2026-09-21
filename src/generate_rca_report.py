@@ -3,49 +3,14 @@ import os
 import time
 import pandas as pd
 from google import genai
-from google.genai.errors import ServerError
+
+# 공통 유틸리티 임포트
+from utils import call_gemini_with_retry
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
 )
 logger = logging.getLogger(__name__)
-
-
-def call_gemini_with_retry(
-    client, model_name: str, prompt_text: str, max_retries: int = 3, delay: int = 30
-):
-    """Calls Gemini API with retry logic for handling temporary server errors or timeouts.
-
-    Args:
-        client: genai.Client instance.
-        model_name (str): Gemini model identifier.
-        prompt_text (str): The prompt string.
-        max_retries (int): Maximum number of retry attempts.
-        delay (int): Base delay multiplier in seconds.
-
-    Returns:
-        response: API response object.
-    """
-    for attempt in range(1, max_retries + 1):
-        try:
-            logger.info(f"🔄 Gemini API 호출 시도 ({attempt}/{max_retries})...")
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt_text,
-            )
-            return response
-        except ServerError as e:
-            logger.warning(f"⚠️ 서버 과부하(503) 또는 일시적 오류 발생: {e}")
-            if attempt == max_retries:
-                logger.error("❌ 최대 재시도 횟수 초과.")
-                raise e
-            wait_time = delay * attempt
-            logger.info(f"⏳ {wait_time}초 후 재시도합니다...")
-            time.sleep(wait_time)
-        except Exception as e:
-            logger.error(f"❌ 예상치 못한 에러 발생: {e}")
-            raise e
-
 
 def generate_rca_report(backtest_metrics: dict) -> str:
     """Generates an AI RCA (Root Cause Analysis) briefing by invoking the Gemini API

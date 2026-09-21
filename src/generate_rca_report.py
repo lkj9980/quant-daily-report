@@ -88,9 +88,9 @@ def generate_rca_report(backtest_metrics: dict, research_context: dict = None) -
         logger.error(f"Gemini API failed after all retries or encountered critical error: {e}. Reading strictly from external fallback template.")
         return load_fallback_template()
 
-def generate_html_report(signaled_df: pd.DataFrame, rca_briefing: str, research_context: dict = None) -> str:
+def generate_html_report(signaled_data, rca_briefing: str, research_context: dict = None) -> str:
     """
-    백테스트 결과 DataFrame과 RCA 브리핑, 딥리서치 요약을 바탕으로 최종 HTML 리포트 카드를 조립하고 아카이브 및 index.html에 동기화합니다.
+    백테스트 결과(DataFrame 또는 dict)와 RCA 브리핑, 딥리서치 요약을 바탕으로 최종 HTML 리포트 카드를 조립합니다.
     """
     logger.info("Assembling HTML report card using external template.")
 
@@ -101,22 +101,33 @@ def generate_html_report(signaled_df: pd.DataFrame, rca_briefing: str, research_
     date_str = timestamp.split(" ")[0]
     filename = f"history/{date_str}_quant_report.html"
 
-    latest_regime = (
-        signaled_df["Regime"].iloc[-1]
-        if "Regime" in signaled_df.columns
-        else "Risk-On"
-    )
-    latest_equity = (
-        int(signaled_df["Target_Equity"].iloc[-1] * 100)
-        if "Target_Equity" in signaled_df.columns
-        else 50
-    )
+    # signaled_data가 DataFrame인지 dict인지 안전하게 분기 처리
+    if isinstance(signaled_data, pd.DataFrame):
+        latest_regime = (
+            signaled_data["Regime"].iloc[-1]
+            if "Regime" in signaled_data.columns
+            else "Risk-On"
+        )
+        latest_equity = (
+            int(signaled_data["Target_Equity"].iloc[-1] * 100)
+            if "Target_Equity" in signaled_data.columns
+            else 50
+        )
+        latest_action = (
+            signaled_data["Action"].iloc[-1]
+            if "Action" in signaled_data.columns
+            else "Hold"
+        )
+    elif isinstance(signaled_data, dict):
+        latest_regime = signaled_data.get("latest_regime", "Risk-On")
+        latest_equity = int(signaled_data.get("target_equity", 0.5) * 100)
+        latest_action = signaled_data.get("action", "Hold")
+    else:
+        latest_regime = "Risk-On"
+        latest_equity = 50
+        latest_action = "Hold"
+
     latest_cash = 100 - latest_equity
-    latest_action = (
-        signaled_df["Action"].iloc[-1]
-        if "Action" in signaled_df.columns
-        else "Hold"
-    )
 
     if research_context is None:
         research_context = {}

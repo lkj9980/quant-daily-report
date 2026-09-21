@@ -63,6 +63,7 @@ def generate_rca_report(backtest_metrics: dict) -> str:
     cum_ret = backtest_metrics.get("cumulative_return", 0.0)
     mdd = backtest_metrics.get("max_drawdown", 0.0)
     win_rate = backtest_metrics.get("win_rate", 0.0)
+    latest_regime = backtest_metrics.get("latest_regime", "Risk-On")
 
     prompt_template_path = "templates/rca_prompt_template.txt"
     fallback_template_path = "templates/rca_fallback_template.txt"
@@ -72,6 +73,7 @@ def generate_rca_report(backtest_metrics: dict) -> str:
             with open(fallback_template_path, "r", encoding="utf-8") as f:
                 fallback_template = f.read()
             return fallback_template.format(
+                latest_regime=latest_regime,
                 cum_ret=cum_ret,
                 mdd=mdd,
                 win_rate=win_rate
@@ -89,8 +91,9 @@ def generate_rca_report(backtest_metrics: dict) -> str:
     with open(prompt_template_path, "r", encoding="utf-8") as f:
         prompt_template = f.read()
 
-    # Format the prompt using the available metrics dictionary
+    # Format the prompt using the available metrics and regime
     prompt = prompt_template.format(
+        latest_regime=latest_regime,
         cum_ret=cum_ret,
         mdd=mdd,
         win_rate=win_rate

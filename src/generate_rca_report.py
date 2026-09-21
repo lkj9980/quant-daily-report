@@ -1,27 +1,25 @@
-import logging
+"""
+src/generate_rca_report.py
+
+Gemini API를 활용한 AI RCA(Root Cause Analysis) 진단 브리핑 생성 및
+외부 템플릿(templates/quant_report_template.html) 기반 최종 HTML 리포트 조립 모듈.
+공통 유틸리티(src/utils.py)의 재시도 로직을 임포트하여 사용합니다.
+"""
+
 import os
-import time
+import logging
 import pandas as pd
 from google import genai
 
 # 공통 유틸리티 임포트
 from utils import call_gemini_with_retry
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-def generate_rca_report(backtest_metrics: dict) -> str:
-    """Generates an AI RCA (Root Cause Analysis) briefing by invoking the Gemini API
-
-    with exponential backoff retries, reading strictly from external template files if unavailable or exhausted.
-
-    Args:
-        backtest_metrics (dict): Dictionary containing strategy performance metrics.
-
-    Returns:
-        str: Diagnostic RCA briefing text.
+def generate_rca_report(backtest_metrics: dict, research_context: dict = None) -> str:
+    """
+    백테스트 결과 지표와 딥리서치 컨텍스트를 받아 Gemini API를 통해 AI RCA 진단 브리핑을 생성합니다.
     """
     logger.info("Generating AI RCA diagnostic briefing via Gemini API.")
 
@@ -29,6 +27,11 @@ def generate_rca_report(backtest_metrics: dict) -> str:
     mdd = backtest_metrics.get("max_drawdown", 0.0)
     win_rate = backtest_metrics.get("win_rate", 0.0)
     latest_regime = backtest_metrics.get("latest_regime", "Risk-On")
+
+    if research_context is None:
+        research_context = {}
+    research_summary = research_context.get("summary", "외부 리서치 정보 없음")
+    research_risks = ", ".join(research_context.get("risks", ["특이사항 없음"]))
 
     prompt_template_path = "templates/rca_prompt_template.txt"
     fallback_template_path = "templates/rca_fallback_template.txt"
@@ -41,7 +44,8 @@ def generate_rca_report(backtest_metrics: dict) -> str:
                 latest_regime=latest_regime,
                 cum_ret=cum_ret,
                 mdd=mdd,
-                win_rate=win_rate
+                win_rate=win_rate,
+                research_summary=research_summary
             )
         raise FileNotFoundError(f"Critical Error: Required fallback template not found at {fallback_template_path}.")
 
@@ -56,12 +60,13 @@ def generate_rca_report(backtest_metrics: dict) -> str:
     with open(prompt_template_path, "r", encoding="utf-8") as f:
         prompt_template = f.read()
 
-    # Format the prompt using the available metrics and regime
     prompt = prompt_template.format(
         latest_regime=latest_regime,
         cum_ret=cum_ret,
         mdd=mdd,
-        win_rate=win_rate
+        win_rate=win_rate,
+        research_summary=research_summary,
+        research_risks=research_risks
     )
 
     try:
@@ -69,10 +74,10 @@ def generate_rca_report(backtest_metrics: dict) -> str:
         
         response = call_gemini_with_retry(
             client=client,
-            model_name="gemini-3.5-flash", 
+            model_name="gemini-2.5-flash", 
             prompt_text=prompt,
             max_retries=3,
-            delay=30
+            delay=10
         )
         
         briefing = response.text.strip()
@@ -83,27 +88,16 @@ def generate_rca_report(backtest_metrics: dict) -> str:
         logger.error(f"Gemini API failed after all retries or encountered critical error: {e}. Reading strictly from external fallback template.")
         return load_fallback_template()
 
-
-def generate_html_report(
-    signaled_df: pd.DataFrame, timestamp: str, rca_briefing: str
-) -> str:
-    """Assembles and saves the final HTML daily intelligence card report into
-
-    the history directory and syncs it to root index.html using an external template file.
-
-    Args:
-        signaled_df (pd.DataFrame): DataFrame with signal and asset weights.
-        timestamp (str): Execution timestamp string.
-        rca_briefing (str): AI RCA diagnostic text.
-
-    Returns:
-        str: Generated filename.
+def generate_html_report(signaled_df: pd.DataFrame, rca_briefing: str, research_context: dict = None) -> str:
+    """
+    백테스트 결과 DataFrame과 RCA 브리핑, 딥리서치 요약을 바탕으로 최종 HTML 리포트 카드를 조립하고 아카이브 및 index.html에 동기화합니다.
     """
     logger.info("Assembling HTML report card using external template.")
 
     os.makedirs("history", exist_ok=True)
     template_path = "templates/quant_report_template.html"
 
+    timestamp = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
     date_str = timestamp.split(" ")[0]
     filename = f"history/{date_str}_quant_report.html"
 
@@ -124,6 +118,10 @@ def generate_html_report(
         else "Hold"
     )
 
+    if research_context is None:
+        research_context = {}
+    research_summary = research_context.get("summary", "딥리서치 데이터 없음")
+
     if not os.path.exists(template_path):
         raise FileNotFoundError(f"Required HTML template not found at {template_path}.")
 
@@ -138,6 +136,7 @@ def generate_html_report(
         latest_cash=latest_cash,
         latest_action=latest_action,
         rca_briefing=rca_briefing,
+        research_summary=research_summary
     )
 
     with open(filename, "w", encoding="utf-8") as f:

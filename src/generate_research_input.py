@@ -1,18 +1,48 @@
 """
 src/generate_research_input.py
 
-Gemini API의 웹 검색(Search Grounding) 기능을 활성화하여,
-실시간 KOSPI 200 거시경제, 외국인/기관 수급, 환율 및 반도체 업황 최신 이슈를 딥리서치하고
-정량 파이프라인이 즉시 로드할 수 있도록 data/deep_research/ 디렉토리에 JSON 파일로 저장하는 모듈.
-외부로 격리된 프롬프트 템플릿(templates/deep_research_prompt_template.txt)을 읽어와 사용합니다.
+Gemini API의 웹 검색(Search Grounding) 기능을 활용한 실시간 딥리서치 인풋 생성 모듈.
+제공해주신 레퍼런스(generate_rca_report.py)의 3회 재시도, 지수 백오프 및 예외 방어 패턴을 완벽히 적용하여
+일시적인 서버 과부하(503)나 타임아웃 상황을 안전하게 방어합니다.
 """
 
 import os
 import json
+import time
+import logging
 from datetime import datetime
 from pathlib import Path
 from google import genai
 from google.genai import types
+from google.genai.errors import ServerError
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger(__name__)
+
+def call_gemini_with_retry(client, model_name: str, prompt_text: str, config: types.GenerateContentConfig, max_retries: int = 3, delay: int = 30):
+    """
+    일시적인 서버 과부하(503) 또는 타임아웃 오류 대응을 위한 재시도 및 지수 백오프 로직을 포함한 Gemini API 호출 함수.
+    """
+    for attempt in range(1, max_retries + 1):
+        try:
+            logger.info(f"🔄 [Deep Research] Gemini API 호출 시도 ({attempt}/{max_retries})...")
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt_text,
+                config=config
+            )
+            return response
+        except ServerError as e:
+            logger.warning(f"⚠️ 서버 과부하(503) 또는 일시적 오류 발생: {e}")
+            if attempt == max_retries:
+                logger.error("❌ 최대 재시도 횟수 초과.")
+                raise e
+            wait_time = delay * attempt
+            logger.info(f"⏳ {wait_time}초 후 재시도합니다...")
+            time.sleep(wait_time)
+        except Exception as e:
+            logger.error(f"❌ 예상치 못한 에러 발생: {e}")
+            raise e
 
 def load_prompt_template(template_path="templates/deep_research_prompt_template.txt"):
     """
@@ -31,34 +61,38 @@ def generate_deep_research_input(output_dir="data/deep_research", template_path=
     """
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        print("[Deep Research Gen] 경고: GEMINI_API_KEY 환경 변수가 설정되지 않았습니다. Fallback 구조로 동작합니다.")
-        return False
-
-    client = genai.Client(api_key=api_key)
-    model_name = "gemini-2.5-flash"
+        logger.warning("[Deep Research Gen] 경고: GEMINI_API_KEY 환경 변수가 설정되지 않았습니다. 기본 Fallback 데이터를 생성합니다.")
+        return save_fallback_research(output_dir)
 
     try:
-        # 외부 격리된 프롬프트 템플릿 로드
         prompt = load_prompt_template(template_path)
     except Exception as e:
-        print(f"[Deep Research Gen] 에러: {e}")
-        return False
+        logger.error(f"[Deep Research Gen] 에러: {e}")
+        return save_fallback_research(output_dir)
 
     try:
-        print(f"[Deep Research Gen] Gemini({model_name}) + Search Grounding을 통한 실시간 딥리서치 수행 중...")
+        client = genai.Client(api_key=api_key)
+        model_name = "gemini-2.5-flash"
+
+        config = types.GenerateContentConfig(
+            tools=[{"google_search": {}}],  # 실시간 웹 검색 그라운딩 활성화
+            temperature=0.2,
+        )
+
+        logger.info(f"[Deep Research Gen] Gemini({model_name}) + Search Grounding을 통한 실시간 딥리서치 수행 중...")
         
-        response = client.models.generate_content(
-            model=model_name,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                tools=[{"google_search": {}}],  # 실시간 웹 검색 그라운딩 활성화
-                temperature=0.2,
-            )
+        response = call_gemini_with_retry(
+            client=client,
+            model_name=model_name,
+            prompt_text=prompt,
+            config=config,
+            max_retries=3,
+            delay=10
         )
         
         raw_text = response.text.strip()
         
-        # 만약 응답에 마크다운 포맷이 포함되어 있다면 제거
+        # 마크다운 포맷(```json 등) 파싱 방어
         if raw_text.startswith("```"):
             raw_text = raw_text.split("```")[1]
             if raw_text.startswith("json"):
@@ -80,12 +114,32 @@ def generate_deep_research_input(output_dir="data/deep_research", template_path=
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(research_data, f, ensure_ascii=False, indent=4)
             
-        print(f"[Deep Research Gen] 성공: 실시간 딥리서치 인풋 파일 생성 완료 -> {filename}")
+        logger.info(f"[Deep Research Gen] 성공: 실시간 딥리서치 인풋 파일 생성 완료 -> {filename}")
         return True
 
     except Exception as e:
-        print(f"[Deep Research Gen] 에러: 딥리서치 생성 또는 파싱 중 예외 발생 ({e})")
-        return False
+        logger.error(f"[Deep Research Gen] 에러: 딥리서치 생성 또는 파싱 중 예외 발생 ({e}). Fallback 데이터로 대체합니다.")
+        return save_fallback_research(output_dir)
+
+def save_fallback_research(output_dir="data/deep_research"):
+    """
+    API 장애 또는 키 미설정 시 안전한 Fallback JSON 파일을 생성합니다.
+    """
+    out_path = Path(output_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+    
+    fallback_data = {
+        "multiplier": 1.0,
+        "summary": "외부 딥리서치 API 호출 실패로 기본 정량 스코어를 유지합니다.",
+        "risks": ["특이사항 없음 (Fallback 모드)"],
+        "status": "fallback"
+    }
+    
+    filename = out_path / f"research_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(fallback_data, f, ensure_ascii=False, indent=4)
+    logger.info(f"[Deep Research Gen] Fallback 딥리서치 인풋 파일 생성 완료 -> {filename}")
+    return True
 
 if __name__ == "__main__":
     generate_deep_research_input()

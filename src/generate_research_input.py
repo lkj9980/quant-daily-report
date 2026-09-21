@@ -19,31 +19,6 @@ from google.genai.errors import ServerError
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-def call_gemini_with_retry(client, model_name: str, prompt_text: str, config: types.GenerateContentConfig, max_retries: int = 3, delay: int = 30):
-    """
-    일시적인 서버 과부하(503) 또는 타임아웃 오류 대응을 위한 재시도 및 지수 백오프 로직을 포함한 Gemini API 호출 함수.
-    """
-    for attempt in range(1, max_retries + 1):
-        try:
-            logger.info(f"🔄 [Deep Research] Gemini API 호출 시도 ({attempt}/{max_retries})...")
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt_text,
-                config=config
-            )
-            return response
-        except ServerError as e:
-            logger.warning(f"⚠️ 서버 과부하(503) 또는 일시적 오류 발생: {e}")
-            if attempt == max_retries:
-                logger.error("❌ 최대 재시도 횟수 초과.")
-                raise e
-            wait_time = delay * attempt
-            logger.info(f"⏳ {wait_time}초 후 재시도합니다...")
-            time.sleep(wait_time)
-        except Exception as e:
-            logger.error(f"❌ 예상치 못한 에러 발생: {e}")
-            raise e
-
 def load_prompt_template(template_path="templates/deep_research_prompt_template.txt"):
     """
     templates/ 디렉토리에 격리된 프롬프트 템플릿 파일을 읽어옵니다.
@@ -72,7 +47,7 @@ def generate_deep_research_input(output_dir="data/deep_research", template_path=
 
     try:
         client = genai.Client(api_key=api_key)
-        model_name = "gemini-2.5-flash"
+        model_name = "gemini-3.5-flash"
 
         config = types.GenerateContentConfig(
             tools=[{"google_search": {}}],  # 실시간 웹 검색 그라운딩 활성화

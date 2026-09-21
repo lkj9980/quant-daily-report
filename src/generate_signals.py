@@ -6,10 +6,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 def generate_signals(
-    features_df: pd.DataFrame, threshold: float = 0.05
+    features_df: pd.DataFrame, threshold: float = 0.05, research_context: dict = None
 ) -> pd.DataFrame:
+
   """Generates portfolio target weights and smooths signals using threshold
 
   rebalancing to prevent high turnover (flickering allocations).

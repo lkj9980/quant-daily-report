@@ -14,7 +14,9 @@ from datetime import datetime
 from pathlib import Path
 from google import genai
 from google.genai import types
-from google.genai.errors import ServerError
+
+# 공통 유틸리티 임포트
+from utils import call_gemini_with_retry
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)

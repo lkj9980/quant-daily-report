@@ -4,6 +4,7 @@ src/generate_research_input.py
 Gemini API의 웹 검색(Search Grounding) 기능을 활성화하여,
 실시간 KOSPI 200 거시경제, 외국인/기관 수급, 환율 및 반도체 업황 최신 이슈를 딥리서치하고
 정량 파이프라인이 즉시 로드할 수 있도록 data/deep_research/ 디렉토리에 JSON 파일로 저장하는 모듈.
+외부로 격리된 프롬프트 템플릿(templates/deep_research_prompt_template.txt)을 읽어와 사용합니다.
 """
 
 import os
@@ -13,7 +14,18 @@ from pathlib import Path
 from google import genai
 from google.genai import types
 
-def generate_deep_research_input(output_dir="data/deep_research"):
+def load_prompt_template(template_path="templates/deep_research_prompt_template.txt"):
+    """
+    templates/ 디렉토리에 격리된 프롬프트 템플릿 파일을 읽어옵니다.
+    """
+    path = Path(template_path)
+    if not path.exists():
+        raise FileNotFoundError(f"[Deep Research Gen] 에러: 프롬프트 템플릿을 찾을 수 없습니다 -> {template_path}")
+    
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
+def generate_deep_research_input(output_dir="data/deep_research", template_path="templates/deep_research_prompt_template.txt"):
     """
     Gemini 모델에 Search Grounding 툴을 부여하여 실시간 딥리서치 분석을 수행하고 JSON 인풋 파일을 생성합니다.
     """
@@ -25,24 +37,12 @@ def generate_deep_research_input(output_dir="data/deep_research"):
     client = genai.Client(api_key=api_key)
     model_name = "gemini-2.5-flash"
 
-    prompt = """
-    당신은 수석 퀀트 거시경제 애널리스트입니다.
-    최신 웹 검색을 활용하여 현재 KOSPI 200 시장 환경(금리, 원/달러 환율, 반도체 및 주요 대형주 업황, 외국인 수급 동향 등)을 면밀히 분석해주세요.
-    
-    분석 결과를 바탕으로 아래 JSON 포맷으로만 응답해주세요.
-    마크다운 코드블록(```json 등)이나 다른 설명 텍스트 없이 오직 순수 JSON 문자열만 출력해야 합니다.
-
-    {
-        "multiplier": 1.05,
-        "summary": "현재 시장 분석 핵심 요약 (최신 거시경제 및 수급 상황 반영 2~3문장)",
-        "risks": ["주요 리스크 1", "주요 리스크 2"],
-        "status": "success"
-    }
-    
-    주의사항: 
-    - multiplier는 시장 상황이 매우 긍정적이면 1.05~1.10, 중립이면 1.0, 부정적이거나 리스크가 크면 0.90~0.95 사이의 float 값으로 설정하세요.
-    - risks는 리스크 요인 2~3개를 문자열 리스트로 작성하세요.
-    """
+    try:
+        # 외부 격리된 프롬프트 템플릿 로드
+        prompt = load_prompt_template(template_path)
+    except Exception as e:
+        print(f"[Deep Research Gen] 에러: {e}")
+        return False
 
     try:
         print(f"[Deep Research Gen] Gemini({model_name}) + Search Grounding을 통한 실시간 딥리서치 수행 중...")

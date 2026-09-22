@@ -1,0 +1,8 @@
+{
+    "multiplier": 1.0,
+    "summary": "외부 딥리서치 API 호출 실패로 기본 정량 스코어를 유지합니다.",
+    "risks": [
+        "특이사항 없음 (Fallback 모드)"
+    ],
+    "status": "fallback"
+}

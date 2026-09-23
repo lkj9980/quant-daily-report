@@ -49,7 +49,7 @@ def generate_deep_research_input(output_dir="data/deep_research", template_path=
 
     try:
         client = genai.Client(api_key=api_key)
-        model_name = "gemini-3.5-flash"
+        model_name = "gemini-2.5-flash"
 
         config = types.GenerateContentConfig(
             tools=[{"google_search": {}}],  # 실시간 웹 검색 그라운딩 활성화

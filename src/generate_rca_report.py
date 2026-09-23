@@ -132,6 +132,21 @@ def generate_html_report(signaled_data, rca_briefing: str, research_context: dic
     if research_context is None:
         research_context = {}
     research_summary = research_context.get("summary", "딥리서치 데이터 없음")
+    
+    # 딥리서치 리스크 항목들을 HTML 리스트 마크업으로 변환하여 템플릿에 주입
+    risks = research_context.get("risks", [])
+    if risks:
+        risks_items_html = "".join([f'<li class="flex items-start space-x-2 text-sm text-amber-200/90"><span class="text-amber-400 mt-0.5">•</span><span>{risk}</span></li>' for risk in risks])
+        research_risks_html = f"""
+        <div class="bg-slate-950/60 rounded-xl p-4 border border-slate-800/80 mt-3">
+            <span class="text-xs font-semibold text-amber-400 uppercase tracking-wide">식별된 주요 거시/수급 리스크</span>
+            <ul class="mt-2 space-y-1.5">
+                {risks_items_html}
+            </ul>
+        </div>
+        """
+    else:
+        research_risks_html = ""
 
     if not os.path.exists(template_path):
         raise FileNotFoundError(f"Required HTML template not found at {template_path}.")
@@ -147,7 +162,8 @@ def generate_html_report(signaled_data, rca_briefing: str, research_context: dic
         latest_cash=latest_cash,
         latest_action=latest_action,
         rca_briefing=rca_briefing,
-        research_summary=research_summary
+        research_summary=research_summary,
+        research_risks_html=research_risks_html
     )
 
     with open(filename, "w", encoding="utf-8") as f:

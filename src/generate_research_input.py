@@ -19,7 +19,6 @@ from google.genai import types
 from utils import call_gemini_with_retry
 from config import GEMINI_MODEL
 
-
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 

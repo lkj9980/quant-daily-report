@@ -13,6 +13,7 @@ from google import genai
 
 # 공통 유틸리티 임포트
 from utils import call_gemini_with_retry
+from config import GEMINI_MODEL
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -74,8 +75,9 @@ def generate_rca_report(backtest_metrics: dict, research_context: dict = None) -
         
         response = call_gemini_with_retry(
             client=client,
-            model_name="gemini-2.5-flash", 
+            model_name=GEMINI_MODEL,
             prompt_text=prompt,
+            config=config,
             max_retries=3,
             delay=10
         )

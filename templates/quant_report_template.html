@@ -1,48 +1,95 @@
 <!DOCTYPE html>
-<html lang="ko" class="dark">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Quant Daily Intelligence Hub - {date_str}</title>
+    <title>KOSPI 200 Quant Intelligence Briefing - {date_str}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>body {{ font-family: 'Inter', sans-serif; }}</style>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+    </style>
 </head>
-<body class="bg-[#090d16] text-slate-100 min-h-screen p-6 sm:p-10">
-    <div class="max-w-5xl mx-auto space-y-6">
-        <header class="flex justify-between items-center border-b border-slate-800 pb-4">
+<body class="min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-6 gap-4">
             <div>
-                <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">Unified Pipeline Active</span>
-                <h1 class="text-2xl font-extrabold text-white mt-2">KOSPI 200 Quant Intelligence Report</h1>
+                <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-2">
+                    QUANT INTELLIGENCE BRIEFING
+                </span>
+                <h1 class="text-3xl font-extrabold tracking-tight text-white">KOSPI 200 시그널 & 리서치 리포트</h1>
             </div>
-            <div class="text-right text-xs text-slate-400">
-                <div>Execution Time</div>
-                <div class="font-semibold text-emerald-400">{timestamp}</div>
+            <div class="text-right">
+                <p class="text-sm text-slate-400">생성 시각</p>
+                <p class="text-base font-mono font-medium text-slate-200">{timestamp}</p>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-                <div class="text-xs text-slate-400 font-semibold uppercase">Market Regime</div>
-                <div class="text-2xl font-bold text-emerald-400 mt-2">{latest_regime}</div>
+        <!-- Core Signals Grid -->
+        <section class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">시장 레짐</p>
+                <p class="text-2xl font-bold mt-2 text-cyan-400">{latest_regime}</p>
             </div>
-            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-                <div class="text-xs text-slate-400 font-semibold uppercase">Target Allocation</div>
-                <div class="text-2xl font-bold text-white mt-2">Equity {latest_equity}% / Cash {latest_cash}%</div>
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">목표 주식 비중</p>
+                <p class="text-2xl font-bold mt-2 text-emerald-400">{latest_equity}%</p>
             </div>
-            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-                <div class="text-xs text-slate-400 font-semibold uppercase">Signal Action</div>
-                <div class="text-2xl font-bold text-indigo-400 mt-2">{latest_action}</div>
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">현금 비중</p>
+                <p class="text-2xl font-bold mt-2 text-slate-300">{latest_cash}%</p>
             </div>
-        </div>
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">금일 액션</p>
+                <p class="text-2xl font-bold mt-2 text-amber-400">{latest_action}</p>
+            </div>
+        </section>
 
-        <div class="bg-indigo-950/40 border border-indigo-500/30 p-6 rounded-2xl">
-            <h3 class="text-indigo-400 font-bold mb-2 flex items-center gap-2">
-                <i class="fa-solid fa-brain"></i> AI RCA Diagnostic Briefing
-            </h3>
-            <p class="text-slate-200 text-sm leading-relaxed">{rca_briefing}</p>
-        </div>
+        <!-- Deep Research Insights (Prominent & Detailed) -->
+        <section class="bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-900 border border-indigo-500/30 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="p-2 bg-indigo-500/20 rounded-lg text-indigo-400 border border-indigo-500/30">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                </div>
+                <h2 class="text-xl font-bold text-white">AI 딥리서치 거시경제 및 수급 인사이트</h2>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="bg-slate-950/60 rounded-xl p-4 border border-slate-800/80">
+                    <span class="text-xs font-semibold text-indigo-400 uppercase tracking-wide">핵심 시황 요약</span>
+                    <p class="text-slate-200 mt-1 leading-relaxed text-base">{research_summary}</p>
+                </div>
+                
+                {research_risks_html}
+            </div>
+        </section>
+
+        <!-- AI RCA Diagnostic Briefing -->
+        <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl">
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="p-2 bg-cyan-500/20 rounded-lg text-cyan-400 border border-cyan-500/30">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                </div>
+                <h2 class="text-xl font-bold text-white">AI RCA 진단 브리핑</h2>
+            </div>
+            <div class="text-slate-300 leading-relaxed space-y-4 whitespace-pre-line bg-slate-950/40 p-5 rounded-xl border border-slate-800/50">
+                {rca_briefing}
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center text-xs text-slate-500 pt-6 border-t border-slate-800">
+            <p>KOSPI 200 Quantitative Intelligence System &copy; {year_str}. Powered by Google Gemini AI & Python.</p>
+        </footer>
+
     </div>
 </body>
 </html>

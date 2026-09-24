@@ -7,7 +7,7 @@ GEMINI_MODEL = os.environ.get(
 # src/config.py
 DEEP_RESEARCH_MODEL = os.environ.get(
     "GEMINI_DEEP_RESEARCH_MODEL", 
-    "gemini-3.6-flash"
+    "gemini-3.7-flash"
 )
 
 # 프로젝트 루트 디렉토리 기준 고정 (유지보수 시 경로 변경은 오직 이 파일에서만 수행)

@@ -53,7 +53,8 @@ def generate_deep_research_input(output_dir="data/deep_research", template_path=
         model_name = DEEP_RESEARCH_MODEL
 
         config = types.GenerateContentConfig(
-            tools=[{"google_search": {}}],  # 실시간 웹 검색 그라운딩 활성화
+            # 실시간 웹 검색 그라운딩 활성화
+            tools=[types.Tool(google_search=types.GoogleSearch())],
             temperature=0.2,
         )
 

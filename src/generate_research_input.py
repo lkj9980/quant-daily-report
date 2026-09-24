@@ -64,7 +64,7 @@ def generate_deep_research_input(output_dir="data/deep_research", template_path=
             client=client,
             model_name=model_name,
             prompt_text=prompt,
-            config=config,
+            #config=config,
             max_retries=3,
             delay=10
         )

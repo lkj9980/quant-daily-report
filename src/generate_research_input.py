@@ -52,11 +52,11 @@ def generate_deep_research_input(output_dir="data/deep_research", template_path=
         client = genai.Client(api_key=api_key)
         model_name = DEEP_RESEARCH_MODEL
 
-        config = types.GenerateContentConfig(
+        #config = types.GenerateContentConfig(
             # 실시간 웹 검색 그라운딩 활성화
-            tools=[types.Tool(google_search=types.GoogleSearch())],
-            temperature=0.2,
-        )
+        #    tools=[types.Tool(google_search=types.GoogleSearch())],
+        #    temperature=0.2,
+        #)
 
         logger.info(f"[Deep Research Gen] Gemini({model_name}) + Search Grounding을 통한 실시간 딥리서치 수행 중...")
         

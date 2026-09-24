@@ -29,6 +29,7 @@ jobs:
         env:
           PYTHONPATH: .
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_DEEP_RESEARCH_MODEL: ${{ secrets.GEMINI_DEEP_RESEARCH_MODEL }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }} 
           MY_EMAIL: ${{ secrets.MY_EMAIL }} 
         run: |

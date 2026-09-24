@@ -17,7 +17,7 @@ from google.genai import types
 
 # 공통 유틸리티 임포트
 from utils import call_gemini_with_retry
-from config import GEMINI_MODEL
+from config import DEEP_RESEARCH_MODEL
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ def generate_deep_research_input(output_dir="data/deep_research", template_path=
 
     try:
         client = genai.Client(api_key=api_key)
-        model_name = GEMINI_MODEL
+        model_name = DEEP_RESEARCH_MODEL
 
         config = types.GenerateContentConfig(
             tools=[{"google_search": {}}],  # 실시간 웹 검색 그라운딩 활성화
@@ -61,7 +61,7 @@ def generate_deep_research_input(output_dir="data/deep_research", template_path=
         
         response = call_gemini_with_retry(
             client=client,
-            model_name=GEMINI_MODEL,
+            model_name=model_name,
             prompt_text=prompt,
             config=config,
             max_retries=3,

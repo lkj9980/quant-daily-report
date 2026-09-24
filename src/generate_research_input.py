@@ -37,7 +37,7 @@ def generate_deep_research_input(output_dir="data/deep_research", template_path=
     """
     Gemini 모델에 Search Grounding 툴을 부여하여 실시간 딥리서치 분석을 수행하고 JSON 인풋 파일을 생성합니다.
     """
-    api_key = os.environ.get("GEMINI_API_KEY")
+    api_key = os.environ.get("GEMINI_DEEP_RESEARCH_MODEL")
     if not api_key:
         logger.warning("[Deep Research Gen] 경고: GEMINI_API_KEY 환경 변수가 설정되지 않았습니다. 기본 Fallback 데이터를 생성합니다.")
         return save_fallback_research(output_dir)

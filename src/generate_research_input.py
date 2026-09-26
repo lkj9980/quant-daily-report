@@ -22,11 +22,11 @@ from config import DEEP_RESEARCH_MODEL
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-def load_research_queries(config_path="config/research_queries.json"):
+def load_research_queries(queries_path="templates/research_queries.json"):
     """
     config/ 디렉토리의 JSON 파일에서 딥리서치 검색 쿼리 리스트를 로드합니다.
     """
-    path = Path(config_path)
+    path = Path(queries_path)
     if not path.exists():
         logger.warning(f"[Deep Research Gen] 경고: 쿼리 설정 파일을 찾을 수 없습니다 ({config_path}). 기본 쿼리를 사용합니다.")
         return [
